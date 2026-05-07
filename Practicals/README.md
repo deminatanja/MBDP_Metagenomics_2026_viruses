@@ -12,10 +12,280 @@ __Table of Contents:__
 5. [Metagenome assembly](#metagenome-assembly)
 6. [Read-based taxonomy](#read-based-taxonomy)
 7. [Assembly QC](#assembly-qc)
-8. [Genome-resolved metagenomics](#genome-resolved-metagenomics)
-9. [MAG QC and taxonomy](#mag-qc-and-taxonomy)
-10. [MAG annotation](#mag-annotation)
-11. [Strain engraftment](#strain-engraftment)
+8. [Viromics](#viromics)
+9. [Genome-resolved metagenomics](#genome-resolved-metagenomics)
+10. [MAG QC and taxonomy](#mag-qc-and-taxonomy)
+11. [MAG annotation](#mag-annotation)
 12. [Automatic binning](#automatic-binning)
 
 ## Introduction
+## Viromics
+
+Make a directory for all virus analyses in your own directory:
+```
+mkdir /scratch/project_2001499/$USER/04_VIROMICS
+```
+NOTE: change ```$USER``` to your directory name.
+
+### Identifying viral contigs using geNomad
+
+There are many different tools for predicting viral contigs from metagenomes. In this course, we will use geNomad. [Read about it](https://www.nature.com/articles/s41587-023-01953-y) and check its [GitHub pages](https://github.com/apcamargo/genomad). Good documentation also [here](https://portal.nersc.gov/genomad/pipeline.html). How does it work?
+
+Note that geNomad needs its database, which is already downloaded to ```/scratch/project_2001499/DBs/``` (and it's also specified in the batch job script below).
+
+**Running geNomad**
+
+In your 04_VIROMICS directory, create a sample list (*sample_list.txt*), which will have sample names:
+```
+ERR5000342
+ERR5000343
+```
+Make a directory for geNomad output:
+```
+mkdir /scratch/project_2001499/$USER/04_VIROMICS/GENOMAD/
+```
+Create a batch job script (*genomad.sh*) in SCRIPTS using this example (check all paths and change if needed!):
+```
+#!/bin/bash
+#SBATCH --job-name=gm
+#SBATCH --time=06:00:00
+#SBATCH --partition=small
+#SBATCH --account=project_2001499
+#SBATCH --mem=10G
+#SBATCH --cpus-per-task=4
+#SBATCH --gres=nvme:50
+
+export PATH="/projappl/project_2001499/genomad/bin:$PATH" 
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+while read i
+do
+genomad end-to-end \
+--cleanup \
+--splits 16 \
+/scratch/project_2001499/$USER/02_ASSEMBLY/${i}_flye/assembly.fasta \
+/scratch/project_2001499/$USER/04_VIROMICS/GENOMAD/${i} \
+/scratch/project_2001499/DBs/genomad_db \
+--threads $SLURM_CPUS_PER_TASK &> /scratch/project_2001499/$USER/00_LOGS/genomad_${i}.log
+done < $1
+```
+Submit the job:
+```
+sbatch /path-to/genomad.sh /path-to/sample_list.txt
+```
+
+Check the used options (and others) by ```genomad -h``` and ```genomad end-to-end -h```. Remember to enter ```export PATH="/projappl/project_2001499/genomad/bin:$PATH"```first.
+
+Note that we used a while loop in this example, how does it work? What other options do you have if you need to run the same tool for multiple samples?
+
+**geNomad output**
+
+Explore the output you got. Have a look at the log files first: 
+- What steps did geNomad run? 
+- How many viral contigs were identified in each sample? How about plasmids? 
+ 
+Find summary tables for each sample, where viral contigs are listed: 
+- What viral taxa were predicted? 
+- Any RNA viruses? Can they be here?
+- What length do viral contigs have? What length is a bacteriophage genome on average vs other viral groups such as giant viruses? 
+- Are there proviruses predicted? 
+
+### Quality control with CheckV
+We will assess the quality and completeness of viral contigs identified by geNomad with CheckV. [Read about the tool](https://www.nature.com/articles/s41587-020-00774-7) and [how it works](https://bitbucket.org/berkeleylab/checkv/src/master/).
+
+Note that CheckV needs its database, which is already downloaded to ```/scratch/project_2001499/DBs/``` (and it's also specified in the batch job script below).
+
+Before running CheckV, we can combine geNomad viral contigs (fna files) from two samples into one set. Since some contigs may have same names in both samples, we should add a sample-based prefix first to contig names so that all headings are unique in a combined fna file:
+```
+cd /scratch/project_2001499/$USER/04_VIROMICS/GENOMAD/
+
+sed "s/^>/>ERR5000342_/" ERR5000342/assembly_summary/assembly_virus.fna > ERR5000342_virus.fna
+
+sed "s/^>/>ERR5000343_/" ERR5000343/assembly_summary/assembly_virus.fna > ERR5000343_virus.fna
+
+cat *_virus.fna > virus_combined.fna
+```
+Check that prefixes were added with e.g. ```head```command and you can also check that your combined file contains the right number of sequences with ```seqkit stats```:
+
+```
+module load biokit
+
+seqkit stats virus_combined.fna
+```
+**Running CheckV**
+
+Make a directory for CheckV analyses:
+
+```
+mkdir /scratch/project_2001499/$USER/04_VIROMICS/CHECKV/
+```
+Run CheckV interactively:
+```
+cd /scratch/project_2001499/$USER/04_VIROMICS/CHECKV/
+
+sinteractive -A project_2001499 -m 10G -c 8 
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+export PATH="/projappl/project_2001499/checkv/bin:$PATH" 
+
+checkv end_to_end \
+/scratch/project_2001499/$USER/04_VIROMICS/GENOMAD/virus_combined.fna \
+virus_combined_checkv.out \
+-d /scratch/project_2001499/DBs/checkv-db-v1.5/ \
+-t $SLURM_CPUS_PER_TASK
+```
+Check the options you used with ```checkv -h``` and ```checkv end_to_end -h```.
+
+Running CheckV will take a few minutes.
+
+**CheckV output**
+
+Explore the output, especially the summary file *quality._summary.tsv*:
+- Are there any proviruses predicted? Are those contigs that were flagged as proviruses by geNomad now also flagged as proviruses by CheckV? Any new proviruses compared to geNomad predictions?*
+- Are most contigs of low, medium or high quality? See how the quality corresponds to completeness.
+- Are there any 100% complete viral genomes listed?
+- Are there contigs with kmer_freq > 1? This indicates that the viral genome is represented multiple times in the contig, which is quite rare.
+- Any warnings?
+
+*Note that we used the geNomad output file as the input for CheckV. geNomad output .fna has proviral sequences already cut from host-derived flanking regiongs. These contigs are also renamed with provirus coordinates (e.g. ERR5000343_contig_14802|provirus_18530_57545). CheckV may not recognize them as proviruses, since they don't have host genes anymore. In some cases, however, it does flag them as proviral and thus suggests cutting them more. In addition, it can also mark as proviruses some contigs that were not recognized as proviral by geNomad. CheckV also outputs the proviruses.fna file, which contains proviral sequences cut as CheckV suggests (note contig names changes, e.g. ERR5000342_contig_11875_1 766-4342/4342). This means that in a real project, one would need to run CheckV again on proviruses for getting correct data on proviral_length, gene_count, viral_genes, host_genes, etc. Note that in the second round, CheckV may "want" to cut even more from some proviruses, but usually, it's not run more than twice. 
+
+ (!) In a real project, CheckV output is typically used for filtering some predictions out. Common thresholds for metagenomic viral contigs include: 
+- at least 1 virus gene identified by CheckV;
+- host to virus gene count ratio no more than 1:1;
+- length minimum of 5 kbp or 10 kbp, unless a genome is >=50% complete (but not shorter than 1 kbp anyway).
+  
+Different thresholds are used for metatranscriptomes.
+
+In this course, we won't filter any viral contigs.
+
+### Dereplicating viral contigs into vOTUs
+
+Since some viral contigs could have been present (and assembled) in both samples, the datasets from the two samples may overalp. To dereplicate viral contigs into viral operational taxonomic units = vOTUs, which roughly correspond to viral species, we can use BLAST (as [parallel BLAST at CSC](https://docs.csc.fi/apps/blast/#usage-of-pb-parallel-blast-at-csc)) and anicalc.py and aniclust.py scripts from CheckV. Standard thresholds for dereplicating into vOTUs: 95% average nucleotide identity and 85% alignment fraction. Check [Minimum Information about an Uncultivated Virus Genome (MIUViG)](https://www.nature.com/articles/nbt.4306) for more info on how vOTU is defined.
+
+For training purposes, we can use all viral contigs predicted by geNomad (without addittional CheckV-based filtering) for dereplicating as follows:
+
+```
+# make directory for vOTUs
+
+mkdir /scratch/project_2001499/$USER/04_VIROMICS/vOTUs
+
+cd /scratch/project_2001499/$USER/04_VIROMICS/vOTUs
+
+module load biokit 
+
+# blast viral contigs against themselves
+
+pb blastn -dbnuc ../GENOMAD/virus_combined.fna -query ../GENOMAD/virus_combined.fna -outfmt '6 std qlen slen' -max_target_seqs 1000 -out virus_combined.tsv
+
+# pb blast will take about 25 min
+
+module load biopythontools
+
+# calculate ANI values
+python /projappl/project_2001499/anicalc.py -i virus_combined.tsv -o virus_combined_ani.tsv
+
+# cluster contigs 
+python /projappl/project_2001499/aniclust.py --fna ../GENOMAD/virus_combined.fna --ani virus_combined_ani.tsv --out virus_combined_clusters.tsv --min_ani 95 --min_tcov 85 --min_qcov 0
+
+# save the first column of the tsv with clusters into a txt file => vOTUs IDs
+
+cut -f1 virus_combined_clusters.tsv > vOTUs_IDs.txt
+
+# extract vOTU sequences based on their IDs from the original fasta file
+seqtk subseq ../GENOMAD/virus_combined.fna vOTUs_IDs.txt > vOTUs.fna
+
+# check how the final vOTUs fasta files looks like
+seqkit stats vOTUs.fna
+```
+How many viral contigs were predicted from two samples in total? How many were retained as vOTUs?
+
+### Linking vOTUs to putative hosts
+
+We will use iPHoP for linking vOTUs to their putative bacterial and archaeal hosts (note: not suitable for eukaryotic viruses). Although some viral contigs were classified as eukaryotic viruses in our dataset, we'll still include them here for training puprposes, but in a real project, you should exclude them from the iPHoP input.
+
+iPHoP integrates multiple methods for host predictions: which ones? [Check the publication](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3002083) and [documentation](https://bitbucket.org/srouxjgi/iphop/src/main/). What are these methods based on?
+
+Note that iPHoP needs its database, which is already downloaded to ```/scratch/project_2001499/DBs/``` (and it's also specified in the batch job script below). We will run the latest version of the default database, but it is also possible to construct your own database by adding e.g. MAGs obtained from the same samples (see "Adding bacterial and/or archaeal MAGs to the host database" in [documentation](https://bitbucket.org/srouxjgi/iphop/src/main/)).
+
+**Running iPHoP**
+
+
+Sample batch job script:
+
+```
+#!/bin/bash
+#SBATCH --job-name=iphop
+#SBATCH --time=72:00:00
+#SBATCH --partition=small
+#SBATCH --account=project_2001499
+#SBATCH --mem=100G
+#SBATCH --cpus-per-task=12
+#SBATCH --gres=nvme:100
+
+export PATH=/projappl/project_2001499/iphop/bin:$PATH
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+iphop predict --fa_file /scratch/project_2001499/$USER/04_VIROMICS/vOTUs/vOTUs.fna \
+--min_score 75 \
+--db_dir /scratch/project_2001499/DBs/IPHOP_Jun_2025_pub_rw \
+--out_dir /scratch/project_2001499/$USER/04_VIROMICS/IPHOP \
+-t $SLURM_CPUS_PER_TASK \
+--single_thread_wish
+```
+Check the used options from manual (how to call it?).
+
+**iPHoP output**
+
+Explore the output. Find the *Host_prediction_to_genus_m75.csv* file. Note that we have applied the 75% cut-off threshold, which is OK for family-level predictions, but the 90% cut-off threshold should be used for genus-level predictions. In a real project, you would need to filter the predictions based on these thresholds.
+- How many vOTUs got predictions (% of total)? Are there multiple predictions for some vOTUs?
+- Which methods are listed as used ones?
+- How many valid genus- vs family-level predictions are there? How about higher levels?
+- How do host predictions match read-based taxonomic profiles of the samples? I.e., are most abundant bacterial/archaeal taxa among the predicted hosts?
+
+### Further reading
+
+Let's think together what could be done in a real project with the obtained data. What other types of analyses could be run? Viral sequences in Kilpisjärvi soil samples were analysed in [Demina et al 2025](https://link.springer.com/article/10.1186/s40168-025-02053-6).
+
+More about soil viruses:
+
+- [A global atlas of soil viruses](https://www.nature.com/articles/s41564-024-01686-x) presents a comprehensive dataset compiled from almost 3K previously sequenced soil metagenomes -> about 38.5 K vOTUs.
+
+- [Beneath the surface: Unsolved questions in soil virus ecology](https://www.sciencedirect.com/science/article/pii/S0038071725000732)
+
+- [Soil viral diversity, ecology and climate change](https://www.nature.com/articles/s41579-022-00811-z)
+
+If interested in other ecosystems, e.g. human gut, check [A genomic atlas of the human gut virome](https://www.biorxiv.org/content/10.1101/2025.11.01.686033v1), or for marine viruses, check the [Tara Oceans project](https://www.tara-oceans-science.org/viruses/).
+
+### IMG/VR v4 database
+
+[IMG/VR v4](https://img.jgi.doe.gov/cgi-bin/vr/main.cgi) database: let's explore it online together! Separate instructions. 
+
+Next version of the IMG/VR v4 db = [MetaVR](https://www.meta-virome.org/) database
+
+Many more databases exist! Also specific ones, like [PaVE](https://pave.niaid.nih.gov/) for papillomaviruses.
+
+### Other useful resources for future
+
+**Tools**
+
+Many more tools for virus identification, annotation, and host prediction exist! See [Awesome-Virome](https://github.com/shandley/awesome-virome).
+
+[Modular Viromics Pipeline](https://gitlab.com/ccoclet/mvp): nicely combines geNomad, CheckV, read mapping, functional annotation into a pipeline with several modules.
+
+Be careful with AMGs 😊: [some guidelines](https://peerj.com/articles/11447/?utm_source=researchgate.net&utm_medium=article) and a [call for caution](https://www.nature.com/articles/s41564-025-02095-4). Upcoming: [CheckAMG](https://github.com/AnantharamanLab/CheckAMG) (pipeline under development).
+
+**Webinars, meetings, conferences**
+
+[European Virus Bioinformatics Center](https://evbc.uni-jena.de/) -> you can subscribe for newsletter, check annual ViBioM meetings, and a collection of virus bioinformatics tools
+
+[ECR Viromics Webinar Series](https://coms.osu.edu/webinars/ecr-viromics-webinar-series), online, sign up to follow
+
+[RNA Virus Journal Club](https://rdrp.io/journal-club/), online, sign up to follow, you can also nominate a speaker or even act as a chair!
+
+
+[International Soil Virus Conference 2026](https://soilmicrobes.fr/international-soil-virus-conference-2026/): virtual participation may be still possible (?), 16-18 Jun 2026, France
+
+[JGI VEGA symposium (Viral EcoGenomics and Applications)](https://jgi.doe.gov/work-with-us/events/vega-symposium), 18-19 Nov 2026, USA

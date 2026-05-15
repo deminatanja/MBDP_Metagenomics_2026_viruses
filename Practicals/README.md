@@ -507,7 +507,7 @@ We will use mainly the concepts of **sequence similarity** and **differential co
 
 We can use these two simple concepts to identify the contigs that originate from the same population and group them into a genomic bin.  
 We usually refer to these bins as "population genomes" or "metagenome-assembled genomes" (MAGs).  
-We will bin the MAGs using `anvi'o`, which is an open-source, community-driven **an**alysis and **vi**sualization platform for microbial **'o**mics (https://anvio.org).  
+We will mostly use `anvi'o`, which is an open-source, community-driven **an**alysis and **vi**sualization platform for microbial **'o**mics (https://anvio.org).  
 Although `anvi'o` does include automatic binning programs (e.g. `MetaBat2`), we will focus on manual, interactive binning.  
 
 Let's start by making a directory for the genome-resolved analyses:  

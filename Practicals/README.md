@@ -104,6 +104,7 @@ mkdir 02_TRIMMED
 
 for sample in 01_DATA/Illumina/*.R1.fastq.gz; do
     sample_name=$(basename $sample .novaseq.R1.fastq.gz)
+    
     cutadapt \
         01_DATA/Illumina/${sample_name}.novaseq.R1.fastq.gz \
         01_DATA/Illumina/${sample_name}.novaseq.R2.fastq.gz \
@@ -127,6 +128,10 @@ We will use three different approaches for metagenome assembly:
 We will assemble only the samples were we have both short- and long-read data. So not all six short reads datasets.  
 The assemblies will take some time, so you can prepare separate batch job scripts for each assembly approach and assemble always both samples in the same script. You can check the [CSC Puhti manual](https://docs.csc.fi/computing/running/creating-job-scripts-puhti/) on how to write a batch job script.  
 The commands for each of the assemblies are given below. Check the options you used from the manual of each tool.  
+
+```bash
+mkdir 03_ASSEMBLY
+```
 
 ```bash
 /projappl/project_2001499/flye/bin/flye \
@@ -478,7 +483,8 @@ plotRDA(tse, "RDA", colour.by = "vegetation")
 Make a directory for all virus analyses in your own directory (if not created yet):
 
 ```bash
-mkdir /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/05_VIROMICS
+cd /scratch/project_2001499/$USER/MBDP_Metagenomics_2026
+mkdir 05_VIROMICS
 ```
 
 NOTE: change ```$USER``` to your directory name.
@@ -501,7 +507,7 @@ ERR5000343
 Make a directory for geNomad output:
 
 ```bash
-mkdir /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/05_VIROMICS/GENOMAD/
+mkdir GENOMAD
 ```
 
 You can find a sample batch job script (*genomad.sh*) in ```/scratch/project_2001499/$USER/MBDP_Metagenomics_2026/src/```, but check all paths and change if needed:
@@ -565,10 +571,9 @@ Note that CheckV needs its database, which is already downloaded to ```/scratch/
 Before running CheckV, we can combine geNomad viral contigs (fna files) from two samples into one set. Since some contigs may have same names in both samples, we should add a sample-based prefix first to contig names so that all headings are unique in a combined fna file:
 
 ```bash
-cd /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/05_VIROMICS/GENOMAD/
+cd GENOMAD
 
 sed "s/^>/>ERR5000342_/" ERR5000342/assembly_summary/assembly_virus.fna > ERR5000342_virus.fna
-
 sed "s/^>/>ERR5000343_/" ERR5000343/assembly_summary/assembly_virus.fna > ERR5000343_virus.fna
 
 cat *_virus.fna > virus_combined.fna
@@ -587,13 +592,14 @@ seqkit stats virus_combined.fna
 Make a directory for CheckV analyses:
 
 ```bash
-mkdir /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/05_VIROMICS/CHECKV/
+cd ..
+mkdir CHECKV
 ```
 
 Run CheckV interactively:
 
 ```bash
-cd /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/05_VIROMICS/CHECKV/
+cd CHECKV
 
 sinteractive -A project_2001499 -m 10G -c 8 
 
@@ -643,10 +649,9 @@ For training purposes, we can use all viral contigs predicted by geNomad (withou
 
 ```bash
 # make a directory for vOTUs
-
-mkdir /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/05_VIROMICS/vOTUs
-
-cd /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/05_VIROMICS/vOTUs
+cd ..
+mkdir vOTUs
+cd vOTUs
 
 module load biokit 
 
@@ -696,8 +701,9 @@ Note that iPHoP needs its database, which is already downloaded to ```/scratch/p
 
 Make a directory for iPHoP output:
 
-```
-mkdir /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/05_VIROMICS/IPHOP
+```bash
+cd ..
+mkdir IPHOP
 ```
 
 Sample batch job script (found in ```/scratch/project_2001499/$USER/MBDP_Metagenomics_2026/src/```):
@@ -816,8 +822,9 @@ Although `anvi'o` does include automatic binning programs (e.g. `MetaBat2`), we 
 
 Let's start by making a directory for the genome-resolved analyses:  
 
-```
-mkdir /scratch/project_2001499/$USER/06_ANVIO
+```bash
+cd /scratch/project_2001499/$USER/MBDP_Metagenomics_2026
+mkdir 06_ANVIO
 ```
 
 In Puhti, you can load the `anvi'o` environment with:  

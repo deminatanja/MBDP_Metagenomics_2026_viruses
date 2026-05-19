@@ -5,7 +5,7 @@ __Table of Contents:__
 1. [Introduction](#introduction)
 2. [Setup](#setup)
 3. [Data](#data)
-4. [Quality control](#quality-control)
+4. [Quality control and trimming](#quality-control-and-trimming)
 5. [Metagenome assembly](#metagenome-assembly)
 6. [Assembly QC](#assembly-qc)
 7. [Read-based taxonomy](#read-based-taxonomy)
@@ -17,44 +17,43 @@ __Table of Contents:__
 
 ## Introduction
 
-During the course we will analyse metagenomic data from soils collected in Kilpisjärvi, Finland. The data originates from the publication: [ZZZ](LINK) and are available in SRA under accession number XXX.  
-The samples were sequenced with both short-read (Illumina) and long-read (Nanopore) sequencing technologies, but for training purposes, we will focus on only a subset of of the data, 2 nanopore sequenced samples (ERR5000342 and ERR5000343) and 6 Illumina sequenced samples (ERR5000342, ERR5000343, ERR5000344, ERR5000345, ERR5000346, and ERR5000347). The data are already available on Puhti for the course analyses.
-The matching samples sequenced with both technologies are ...
+During the course we will analyse metagenomic data from tundra soils collected in Kilpisjärvi, Finland.  
+The whole dataset can be found in [ENA](https://www.ebi.ac.uk/ena/browser/view/PRJEB41762), and you can read the publication [here](https://doi.org/10.1186/s40793-022-00424-2).  
+The samples were sequenced with both short-read (Illumina) and long-read (Nanopore) sequencing technologies, and for training purposes, we will focus on a small subset of of the data:  
+
+- 2 nanopore libraries (ERR5000342 and ERR5000343)
+- 12 Illumina libraries (ERR4998593, ERR4998611, ERR4998615, ERR4998632, ERR4998657, ERR4998663, ERR4998600, ERR4998601, ERR4998602, ERR4998637, ERR4998638 and ERR4998640)
 
 ## Setup
 
-First create your own folder under the course project directory on Puhti, e.g.:
+First create your own folder under the course project directory in Puhti:  
 
 ```bash
 mkdir /scratch/project_2001499/$USER
 ```
 
-NOTE: change ```$USER``` to your directory name.
-
-After that, clone this github reposoitory to your own folder.  
+And then clone this reposoitory to your own folder:    
 
 ```bash
-cd /scratch/project_2001499/$USER   
+cd /scratch/project_2001499/$USER
 git clone https://github.com/MBDP-bioinformatics-courses/MBDP_Metagenomics_2026.git
 ```
 
 ## Data
 
-When the course github pages are cloned, create folder for the course data and copy the data from the course project directory to your own directory:
-We will make separate folders for short- and long-read data.
+When the course github pages are cloned, create folder for the course data and copy the data from the course project directory to your own directory.  
+We will make separate folders for the short- and long-read data:  
 
 ```bash
-mkdir /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/01_DATA/short_read
-mkdir /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/01_DATA/long_read
-
-cp /scratch/project_2001499/Data/Illumina/* /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/01_DATA/short_read/
-cp /scratch/project_2001499/Data/Nanopore/* /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/01_DATA/long_read/
+cd /scratch/project_2001499/$USER/MBDP_Metagenomics_2026
+mkdir 01_DATA
+cp -r /scratch/project_2001499/Data/* 01_DATA
 ```
 
-Copy also the metadata file to your own directory:
+And copy also the metadata file to your own directory:  
 
 ```bash
-cp /scratch/project_2001499/Data/metadata.tsv /scratch/project_2001499/$USER/MBDP_Metagenomics_2026/01_DATA/
+cp /scratch/project_2001499/Data/metadata.tsv 01_DATA
 ```
 
 After copying, verify that you have the right files in your data folders with ```ls```.  
@@ -63,57 +62,67 @@ After copying, verify that you have the right files in your data folders with ``
 
 ### QC
 
-We will start by checking the quality of the raw reads. For short reads, we will use FastQC and MultiQC, and for long reads, we will use NanoPlot and nanoQC.  
+We will start by checking the quality of the raw reads.  
+For short reads, we will use FastQC and MultiQC, and for long reads, we will use NanoPlot and nanoQC.  
 
-Before you start, allocate resources with `sinteractive -i`. You will need 4-6 CPUs and 2-5 GB of memory for the QC. This should not take more than 2 hours.
+Before you start, allocate the computing resources with `sinteractive -i`.  
+You will need 4-6 CPUs and 2-5 GB of memory, and it should not take more than 2 hours.  
 
 __Short reads:__  
 Run this once, it will analyse all the fastq files in the folder with FastQC and then summarize the results with MultiQC.  
 
 ```bash
 module load biokit
-fastqc 01_DATA/short_read/*.fastq.gz -o 01_DATA/FASTQC --threads $SLURM_CPUS_PER_TASK
-multiqc --interactive 01_DATA/FASTQC -o 01_DATA/
-module purge
+mkdir 01_DATA/FASTQC
+
+fastqc 01_DATA/Illumina/*.fastq.gz -o 01_DATA/FASTQC --threads $SLURM_CPUS_PER_TASK
+multiqc --interactive 01_DATA/FASTQC -o 01_DATA/FASTQC
 ```
 
 __Long reads:__  
-Run these to commands with both samples separately, changing the path to the fastq file and output folder name.
+Run these two commands separately for each sample.  
+Make sure to change the path to the fastq file and the name of the output folder.  
 
 ```bash
 /projappl/project_2001499/nano_tools/bin/NanoPlot \
-  -o nanoplot_out -f png --fastq path-to/your_raw_nanopore_reads.fastq
+  -o path-to-output-folder -f png --fastq path-to-nanopore-reads.fastq
 
-/projappl/project_2001499/nano_tools/bin/nanoQC -o nanoQC_out path-to/your_raw_nanopore_reads.fastq
+/projappl/project_2001499/nano_tools/bin/nanoQC \
+  -o path-to-output-folder path-to-nanopore-reads.fastq
 ```
 
 After QC is done, we will explore the results together.  
 
 ### Trimming
 
-After checking the quality of the reads, we will remove adapter from short reads with cutadapt.  
-The long reads will not be trimmed.  
+After checking the quality of the reads, we will remove the adapters from the short reads with `cutadapt`.  
+The Nanopore reads will not be trimmed.  
 
 ```bash
 module load cutadapt/4.9
+mkdir 02_TRIMMED
 
-for sample in 01_DATA/short_read/*.R1.fastq.gz; do
+for sample in 01_DATA/Illumina/*.R1.fastq.gz; do
     sample_name=$(basename $sample .novaseq.R1.fastq.gz)
     cutadapt \
-        -a FW_ADAPTER -A RV_ADAPTER \
+        01_DATA/Illumina/${sample_name}.novaseq.R1.fastq.gz \
+        01_DATA/Illumina/${sample_name}.novaseq.R2.fastq.gz \
         -o 02_TRIMMED/${sample_name}_R1_trimmed.fastq.gz \
         -p 02_TRIMMED/${sample_name}_R2_trimmed.fastq.gz \
-        01_DATA/short_read/${sample_name}_R1.fastq.gz \
-        01_DATA/short_read/${sample_name}_R2.fastq.gz \
-        --cores $SLURM_CPUS_PER_TASK \
+        -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC \
+        -A CTGTCTCTTATACACATCTGACGCTGCCGACGA \
         --minimum-length 50 \
-        > 00_LOGS/${sample_name}_cutadapt.log
+        --cores $SLURM_CPUS_PER_TASK &> 02_TRIMMED/${sample_name}_cutadapt.log
 done
 ```
 
 ## Metagenome assembly
 
-We will use three different approaches for metagenome assembly: short-read assembly, long-read assembly, and hybrid assembly. For short-read assembly, we will use MEGAHIT, for long-read assembly, we will use Flye, and for hybrid assembly, we will use metaspades.  
+We will use three different approaches for metagenome assembly:  
+
+- short-read assembly with `MEGAHIT`  
+- long-read assembly with `Flye`  
+- hybrid assembly with `metaspades`  
 
 We will assemble only the samples were we have both short- and long-read data. So not all six short reads datasets.  
 The assemblies will take some time, so you can prepare separate batch job scripts for each assembly approach and assemble always both samples in the same script. You can check the [CSC Puhti manual](https://docs.csc.fi/computing/running/creating-job-scripts-puhti/) on how to write a batch job script.  
@@ -122,13 +131,13 @@ The commands for each of the assemblies are given below. Check the options you u
 ```bash
 /projappl/project_2001499/flye/bin/flye \
     --meta \
-    --nano-raw 01_DATA/long_read/ERR5000342.nanopore.fastq.gz \
+    --nano-raw 01_DATA/Nanopore/ERR5000342.nanopore.fastq.gz \
     --out-dir 03_ASSEMBLY/ERR5000342_flye \
     --threads $SLURM_CPUS_PER_TASK
 
 /projappl/project_2001499/flye/bin/flye \
     --meta \
-    --nano-raw 01_DATA/long_read/ERR5000343.nanopore.fastq.gz \
+    --nano-raw 01_DATA/Nanopore/ERR5000343.nanopore.fastq.gz \
     --out-dir 03_ASSEMBLY/ERR5000343_flye \
     --threads $SLURM_CPUS_PER_TASK
 ```
@@ -139,17 +148,18 @@ module load spades/4.2.0
 metaspades.py \
     -1 02_TRIMMED/ERR4998593_R1_trimmed.fastq.gz \
     -2 02_TRIMMED/ERR4998593_R2_trimmed.fastq.gz \
-    --nanopore 01_DATA/long_read/ERR5000342.nanopore.fastq.gz \
-    --only-assembler -o 03_ASSEMBLY/ERR5000342_hybrid \
-    --threads $SLURM_CPUS_PER_TASK
+    --nanopore 01_DATA/Nanopore/ERR5000342.nanopore.fastq.gz \
+    -o 03_ASSEMBLY/ERR5000342_hybrid \
+    --threads $SLURM_CPUS_PER_TASK \
+    --only-assembler
 
 metaspades.py \
     -1 02_TRIMMED/ERR4998600_R1_trimmed.fastq.gz \
     -2 02_TRIMMED/ERR4998600_R2_trimmed.fastq.gz \
-    --nanopore 01_DATA/long_read/ERR5000343.nanopore.fastq.gz \
-    --only-assembler \
+    --nanopore 01_DATA/Nanopore/ERR5000343.nanopore.fastq.gz \
     -o 03_ASSEMBLY/ERR5000343_hybrid \
-    --threads $SLURM_CPUS_PER_TASK
+    --threads $SLURM_CPUS_PER_TASK \
+    --only-assembler
 ```
 
 ```bash
@@ -159,14 +169,18 @@ megahit \
     -1 02_TRIMMED/ERR4998593_R1_trimmed.fastq.gz \
     -2 02_TRIMMED/ERR4998593_R2_trimmed.fastq.gz \
     -o 03_ASSEMBLY/ERR5000342_megahit \
-    --kmin 27 --k-step 10 --kmin-1pass \
+    --kmin 27 \
+    --k-step 10 \
+    --kmin-1pass \
     -t $SLURM_CPUS_PER_TASK
 
 megahit \
     -1 02_TRIMMED/ERR4998600_R1_trimmed.fastq.gz \
     -2 02_TRIMMED/ERR4998600_R2_trimmed.fastq.gz \
     -o 03_ASSEMBLY/ERR5000343_megahit \
-    --kmin 27 --k-step 10 --kmin-1pass \
+    --kmin 27 \
+    --k-step 10 \
+    --kmin-1pass \
     -t $SLURM_CPUS_PER_TASK
 ```
 

@@ -62,7 +62,7 @@
 | 12.00-13.00 | __Lunch break__ | :plate_with_cutlery: |
 | 13.00-14.00 | __Jenni Hultman:__ Info session about Roihu | [Slides](../Lectures/XX.pdf) |
 | 14.00-14.15 | __Coffee break__  | :coffee: |
-| 14.15-15.45 | _Hands-on:_ XXX | [Instructions](README.md#XX) |
+| 14.15-15.45 | _Hands-on:_ XX ? | [Instructions](README.md#XX) |
 | 15.45-16.00 | __Daily wrap-up__ |  |
 | 16.30 -> | __Dinner at Pamela__  | :stew: |
 

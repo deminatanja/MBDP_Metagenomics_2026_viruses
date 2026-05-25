@@ -94,7 +94,7 @@ NanoPlot will give a warning about not finding Chrome, but it will still run. Yo
     -o path-to-output-folder \
     --only-report \
     --format png \
-    --fastq path-to-nanopore-reads.fastq
+    --fastq path-to-nanopore-reads.fastq.gz
 ```
 
 After QC is done, we will explore the results together.  

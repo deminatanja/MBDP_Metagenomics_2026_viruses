@@ -21,7 +21,6 @@ Main materials:
 - Orchestrating Microbiome Analysis with Bioconductor: [OMA](https://microbiome.github.io/OMA/docs/devel/)
 - Basic concepts in Viromics: [Viromics approaches for the study of viral diversity and ecology in microbiomes](https://www.nature.com/articles/s41576-025-00871-w)
 
-
 ## Friday (29.5.26)
 
 Main materials:

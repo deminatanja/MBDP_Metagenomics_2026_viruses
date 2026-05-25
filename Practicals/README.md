@@ -308,7 +308,7 @@ Import data into an object called tse.
 tse <- mia::importMetaPhlAn("merged_metaphlan.txt", colData = sample_meta)
 ```
 
-2) Inspect the treeSummarizedExperiment (TSE) object
+2)Inspect the treeSummarizedExperiment (TSE) object
 
 ```r
 tse

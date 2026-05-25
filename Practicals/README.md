@@ -135,7 +135,7 @@ We will use three different approaches for metagenome assembly:
 - hybrid assembly with `metaspades`  
 
 We will assemble only the samples were we have both short- and long-read data. So not all six short reads datasets.  
-The assemblies will take some time, so you can prepare separate batch job scripts for each assembly approach and assemble always both samples in the same script. You can check the [CSC Puhti manual](https://docs.csc.fi/computing/running/creating-job-scripts-puhti/) on how to write a batch job script.  
+The assemblies will take some time, so you can prepare separate batch job scripts for each assembly approach and assemble always both samples in the same script. You can check the [CSC Puhti manual](https://docs.csc.fi/computing/running/creating-job-scripts-puhti/) or [CSC tutorial](https://csc-training.github.io/csc-env-eff/hands-on/batch_jobs/serial.html) on how to write a batch job script.  
 The commands for each of the assemblies are given below. Check the options you used from the manual of each tool.  
 
 ```bash

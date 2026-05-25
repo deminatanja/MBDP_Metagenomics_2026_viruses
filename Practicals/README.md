@@ -52,6 +52,7 @@ Now create a folder for the course data and copy the data from the course projec
 
 ```bash
 cd /scratch/project_2001499/$USER/MBDP_Metagenomics_2026
+mkdir 01_DATA
 cp -r /scratch/project_2001499/Data/* 01_DATA
 ```
 

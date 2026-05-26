@@ -47,9 +47,9 @@
 | 09.00-10.00 | __Igor Pessi:__ Introduction to binning and MAGs | [Slides](../Lectures/introduction-to-binning-and-MAGs.pdf) |
 | 10.00-12.00 | _Hands-on:_ MAG binning in anvio | [Instructions](README.md#MAG-binning-in-anvio) |
 | 12.00-13.00 | __Lunch break__ | :plate_with_cutlery: |
-| 13.00-14.00 | _Hands-on:_ MAG binning in anvio                 | [Instructions](README.md#mag-binning-in-anvio)             |
+| 13.00-14.00 | _Hands-on:_ MAG binning in anvio                 | [Instructions](README.md#MAG-binning-in-anvio)             |
 | 14.00-14.15 | __Coffee break__  | :coffee: |
-| 14.15-15.45 | _Hands-on:_ MAG binning in anvio                 | [Instructions](README.md#mag-binning-in-anvio)             |
+| 14.15-15.45 | _Hands-on:_ MAG binning in anvio                 | [Instructions](README.md#MAG-binning-in-anvio)             |
 | 15.45-16.00 | __Daily wrap-up__ |  |
 
 
@@ -57,7 +57,7 @@
 
 | Time | Description | Link |
 | --- | --- | -- |
-| 09.00-12.00 | _Hands-on:_ Phylogenetic and functional analyses of MAGs | [Instructions](README.md#phylogenetic-and-functional-analyses-of-mags) |
+| 09.00-12.00 | _Hands-on:_ Phylogenetic and functional analyses of MAGs | [Instructions](README.md#Phylogenetic-and-functional-analyses-of-MAGs) |
 | 12.00-13.00 | __Lunch break__ | :plate_with_cutlery: |
 | 13.00-14.00 | __Jenni Hultman:__ Info session about Roihu | [Slides](../Lectures/XX.pdf) |
 | 14.00-14.15 | __Coffee break__  | :coffee: |

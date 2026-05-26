@@ -845,6 +845,7 @@ Let's start by making a directory for the genome-resolved analyses:
 ```bash
 cd /scratch/project_2001499/$USER/MBDP_Metagenomics_2026
 mkdir 06_ANVIO
+cd 06_ANVIO
 ```
 
 In Puhti, we load our `anvi'o` installation with:  
@@ -886,7 +887,7 @@ for sample in sample1 sample2 sample3
 do
   bowtie2 -1 R1_reads.fastq -2 R2_reads.fastq
   samtools view sample.sam
-  samtools sort sample.bam
+  samtools sort sample.raw.bam
   samtools index sample.bam
 done
 ```
@@ -914,6 +915,7 @@ But remember:
 - You will need to modify the script to point the commands to your own files  
 - You will need to run the script once for each assembly  
 
+**DO NOT** modify this file directly; copy it to your own directory first.  
 After you have submitted the script with `sbatch` the job will take a couple of hours to conclude.  
 But once it is finished we are ready to bin the MAGs!
 

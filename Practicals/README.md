@@ -769,7 +769,7 @@ Note that Phold needs its database, which is already downloaded to ```/scratch/p
 
 Make a directory ```PHOLD```for Phold output in your ```05_VIROMICS``` directory.
 
-Make a batch job script (sample found in ```/scratch/project_2001499/$USER/MBDP_Metagenomics_2026/src/```):
+Make a batch job script (you can get a sample script from the updated repo, move to your ```src```directory and run ``` wget https://raw.githubusercontent.com/MBDP-bioinformatics-courses/MBDP_Metagenomics_2026/main/src/phold.sh``` or just copy this one below):
 
 ```bash
 #!/bin/bash

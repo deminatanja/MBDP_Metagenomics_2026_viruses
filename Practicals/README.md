@@ -284,6 +284,7 @@ Copy metadata to your own folder.
 ```bash
 cp /scratch/project_2001499/Data/metadata.tsv .
 ```
+### R and statistical exploration
 
 Open an interactive session on Puhti with RStudio for 4h using the default settings; alternatively, use the small queue with 4 MB of memory, 4 cores, no NVMe, and 4h time.
 
